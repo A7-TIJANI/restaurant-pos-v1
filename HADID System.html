@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHABAA POS - Pro Edition V7</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --bg: #f4f7f6;
+            --accent: #8e44ad;
+            --warning: #f39c12;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background: var(--bg);
+            color: #333;
+        }
+
+        button, input { font-family: inherit; }
+        button:focus-visible, input:focus-visible {
+            outline: 3px solid #2980b9;
+            outline-offset: 1px;
+        }
+
+        .admin-panel {
+            flex: 1;
+            padding: 20px;
+            border-right: 2px solid #d1d9e0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin: 15px 0 10px;
+            border-bottom: 2px solid #d1d9e0;
+            padding-bottom: 5px;
+        }
+
+        .top5-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .top5-card {
+            color: white;
+            padding: 14px 8px;
+            border-radius: 10px;
+            min-height: 80px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .top5-card .t5-label {
+            font-size: 0.8rem;
+            opacity: 0.95;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+
+        .top5-card .t5-val { font-size: 1.5rem; font-weight: bold; }
+
+        .top5-empty {
+            grid-column: 1 / -1;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            font-style: italic;
+            padding: 14px;
+            text-align: center;
+            background: #ecf0f1;
+            border-radius: 8px;
+        }
+
+        .pay-bar { display: flex; gap: 6px; margin-bottom: 12px; justify-content: center; }
+
+        .pay-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            background: white;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.15s;
+        }
+
+        .pay-btn.active { border-color: var(--primary); background: var(--primary); color: white; }
+        .pay-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .menu-card {
+            border-radius: 12px;
+            padding: 16px 10px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: none;
+            position: relative;
+            user-select: none;
+        }
+
+        .menu-card:hover { transform: scale(1.05); filter: brightness(1.1); }
+
+        .menu-card b {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .menu-card .price-tag {
+            background: rgba(255,255,255,0.9);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #333;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
+        .menu-card .stock-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .menu-card .stock-text {
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .menu-card.out-of-stock { opacity: 0.4; filter: grayscale(0.6); cursor: default; }
+        .menu-card.out-of-stock:hover { transform: none; filter: grayscale(0.6); }
+
+        .menu-card.out-of-stock::after {
+            content: "OUT OF STOCK";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            background: rgba(0,0,0,0.75);
+            color: white;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .menu-card.low-stock {
+            box-shadow: 0 0 0 3px var(--danger), 0 4px 6px rgba(0,0,0,0.1);
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%   { box-shadow: 0 0 0 3px var(--danger); }
+            50%  { box-shadow: 0 0 0 6px rgba(231,76,60,0.3); }
+            100% { box-shadow: 0 0 0 3px var(--danger); }
+        }
+
+        .addon-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .addon-tag {
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.15s;
+        }
+
+        .addon-tag:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .cart-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
+            cursor: pointer;
+        }
+
+        .cart-item.selected { border: 2px solid var(--accent); border-left: 5px solid var(--accent); }
+
+        .item-main { display: flex; justify-content: space-between; align-items: center; }
+
+        .item-line-details { font-size: 0.85rem; color: var(--accent); font-weight: bold; margin-top: 3px; }
+
+        .cart-empty {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            text-align: center;
+            padding: 14px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px dashed #bdc3c7;
+        }
+
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .stats-table td { padding: 5px; border-bottom: 1px dotted #ccc; }
+
+        .pay-badge { background: #ecf0f1; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; text-align: center; flex: 1; }
+        .pay-badge b { display: block; font-size: 0.95rem; color: var(--primary); }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px;
+            border-bottom: 1px dotted #ccc;
+            font-size: 0.8rem;
+        }
+
+        .order-row button { color: var(--danger); border: none; background: none; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
+        .order-row button:hover { text-decoration: underline; }
+
+        .settings-area { margin-top: 30px; padding-top: 20px; border-top: 3px double #d1d9e0; }
+
+        .manage-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            padding: 5px;
+            background: #fff;
+            margin-bottom: 2px;
+            border-radius: 4px;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .manage-item input[type="number"], .manage-item input[type="text"] {
+            width: 65px;
+            padding: 3px 5px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .manage-item .save-stock-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .manage-item .save-stock-btn:hover { background: #219a52; }
+
+        .field-error { color: var(--danger); font-size: 0.7rem; margin: -6px 0 8px; }
+
+        .lock-panel {
+            background: #fff;
+            border: 1px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .lock-panel input {
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            width: 120px;
+            text-align: center;
+            font-size: 1rem;
+            letter-spacing: 3px;
+            margin-right: 6px;
+        }
+        .lock-panel button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .restock-pop {
+            position: fixed;
+            z-index: 50;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            padding: 14px;
+            width: 220px;
+        }
+        .restock-pop label { font-size: 0.75rem; font-weight: bold; color: var(--primary); display: block; margin-bottom: 6px; }
+        .restock-pop input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .restock-pop .pop-actions { display: flex; gap: 6px; }
+        .restock-pop button {
+            flex: 1;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .restock-pop .confirm-btn { background: var(--success); color: white; }
+        .restock-pop .cancel-btn { background: #ecf0f1; color: #333; }
+        .pop-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 40; }
+
+        .report-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            width: 360px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 55;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+        }
+        .report-modal h3 { margin: 0 0 10px; color: var(--primary); font-size: 1rem; }
+        .report-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dotted #ccc;
+            font-size: 0.85rem;
+        }
+        .report-actions { display: flex; gap: 8px; margin-top: 14px; }
+        .report-actions button {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .report-actions .close-btn { background: #ecf0f1; color: #333; }
+        .report-actions .print-btn { background: var(--success); color: white; }
+
+        #toast-stack {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            min-width: 220px;
+            max-width: 320px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            animation: toast-in 0.2s ease-out;
+        }
+        .toast.info { background: var(--primary); }
+        .toast.error { background: var(--danger); }
+        .toast.success { background: var(--success); }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .preview-area {
+            width: 400px;
+            background: #34495e;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .thermal-invoice {
+            background: white;
+            width: 72mm;
+            padding: 4mm;
+            font-family: 'Courier New', monospace;
+            color: black;
+            font-weight: 900;
+        }
+
+        .order-number {
+            font-size: 28px;
+            font-weight: 900;
+            margin: 5px 0;
+            border: 3px solid black;
+            padding: 4px 12px;
+            display: inline-block;
+        }
+
+        .items-table { width: 100%; border-collapse: collapse; }
+        .items-table td { padding: 8px 0; font-size: 16px; vertical-align: top; border-bottom: 1px solid #000; font-weight: 900; }
+        .addon-text { font-size: 13px; font-weight: 900; color: black; display: block; margin-top: 2px; }
+
+        .btn-print {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn-print:disabled { background: #7f8c8d; cursor: not-allowed; }
+        .btn-print:hover:not(:disabled) { background: #219a52; }
+
+        .btn-reset {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-top: 20px;
+            align-self: flex-start;
+        }
+
+        .btn-secondary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .print-target { display: none; font-family: 'Courier New', monospace; color: black; font-weight: 900; background: white; }
+
+        @media print {
+            body * { visibility: hidden !important; }
+            .print-target.active, .print-target.active * { visibility: visible !important; }
+            .print-target.active { display: block !important; position: absolute; left: 0; top: 0; width: 72mm; padding: 4mm; background: white; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast-stack"></div>
+
+    <div class="admin-panel">
+
+        <div class="header-box">
+            <h2 style="margin:0;">SHABAA</h2>
+            <div id="clock" style="font-weight:bold; color:var(--success); font-size: 0.9rem;"></div>
+        </div>
+
+        <div class="section-title">Top 5 Best Sellers</div>
+        <div id="top5-container" class="top5-grid"></div>
+
+        <div class="section-title">1. Quick Add-ons</div>
+        <div id="addon-bar" class="addon-bar"></div>
+
+        <div class="pay-bar">
+            <button class="pay-btn active" id="pay-cash" onclick="setPayment('Cash')">Cash</button>
+            <button class="pay-btn" id="pay-momo" onclick="setPayment('MoMo')">MoMo</button>
+        </div>
+
+        <div class="section-title">2. Menu</div>
+        <div id="menu-container" class="menu-grid"></div>
+
+        <button class="btn-print" id="print-btn" onclick="triggerPrint()">PRINT INVOICE</button>
+
+        <div class="section-title">Current Order</div>
+        <div id="cart-items-list"></div>
+
+        <div class="settings-area">
+            <div class="section-title">System Management</div>
+
+            <div id="lock-screen" class="lock-panel">
+                <div style="font-size:0.85rem; color:#7f8c8d; margin-bottom:10px;">Enter PIN to manage menu, addons, and data.</div>
+                <input type="password" id="pin-input" inputmode="numeric" maxlength="8" placeholder="PIN">
+                <button onclick="tryUnlock()">Unlock</button>
+                <div id="pin-error" class="field-error" style="margin-top:8px;"></div>
+            </div>
+
+            <div id="settings-content" style="display:none;">
+                <div class="section-title">Sales Summary</div>
+                <div style="background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:15px;">
+                    <div style="display:flex; justify-content: space-between; margin-bottom:5px; font-weight:bold;">
+                        <span>Orders: <span id="stat-count">0</span></span>
+                        <span style="color:var(--success)">Total: <span id="stat-revenue">0</span> RWF</span>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-bottom:10px;">
+                        <div class="pay-badge">Cash<br><b id="cash-total">0</b></div>
+                        <div class="pay-badge">MoMo<br><b id="momo-total">0</b></div>
+                    </div>
+                    <table class="stats-table" id="item-stats-body"></table>
+                </div>
+
+                <div style="font-size:0.8rem; font-weight:bold; margin-bottom:5px; color:var(--primary);">Add Menu Item</div>
+                <div style="display: flex; gap: 5px; margin-bottom: 4px;">
+                    <input type="text" id="new-item-name" placeholder="Name" style="flex:2; padding:8px;">
+                    <input type="number" id="new-item-price" placeholder="Price" min="1" style="flex:1; padding:8px;">
+                    <input type="number" id="new-item-stock" placeholder="Stock" value="50" min="0" style="flex:1; padding:8px;">
+                    <button onclick="addNewItem()" style="background:var(--primary); color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Add</button>
+                </div>
+                <div id="new-item-error" class="field-error"></div>
+                <div id="manage-menu-list"></div>
+
+                <div class="section-title" style="margin-top:20px;">Quick Addons Management</div>
+                <div style="display: flex; gap: 5px; margin-bottom: 4px;">
+                    <input type="text" id="new-addon-name" placeholder="Addon name" style="flex:2; padding:8px;">
+                    <button onclick="addNewAddon()" style="background:var(--accent); color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Add</button>
+                </div>
+                <div id="new-addon-error" class="field-error"></div>
+                <div id="manage-addon-list"></div>
+
+                <div class="section-title" style="margin-top:20px;">Recent Orders</div>
+                <div id="orders-list" style="max-height:220px; overflow-y:auto; margin-bottom:10px;"></div>
+
+                <div class="section-title" style="margin-top:20px;">Reports</div>
+                <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                    <button class="btn-secondary" onclick="generateReport('daily')">Daily Report</button>
+                    <button class="btn-secondary" onclick="generateReport('weekly')">Weekly Report</button>
+                    <button class="btn-secondary" onclick="generateReport('monthly')">Monthly Report</button>
+                </div>
+
+                <div class="section-title" style="margin-top:20px;">Backup &amp; Security</div>
+                <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                    <button class="btn-secondary" onclick="exportData()">Export Data (.json)</button>
+                    <label class="btn-secondary" style="cursor:pointer;">
+                        Import Data
+                        <input type="file" id="import-file" accept="application/json" style="display:none;" onchange="importData(event)">
+                    </label>
+                    <button class="btn-secondary" onclick="changePin()">Change PIN</button>
+                </div>
+
+                <button class="btn-reset" onclick="resetSystem()">RESET DAILY DATA</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-area">
+        <div id="invoice-wrap" class="thermal-invoice">
+            <div style="text-align:center">
+                <div style="font-size:26px; font-weight:900;">SHABAA</div>
+                <div class="order-number">#<span class="curr-order-id">1</span></div>
+                <div style="font-size:12px; font-weight:900;" id="print-date"></div>
+                <div style="border-top:2px solid black; border-bottom:2px solid black; margin:8px 0; font-size:14px; font-weight:900;">CUSTOMER COPY</div>
+            </div>
+            <table class="items-table"><tbody id="cust-body"></tbody></table>
+            <div style="border-top:3px solid black; margin-top:8px; padding-top:8px; display:flex; justify-content:space-between; font-size:22px; font-weight:900;">
+                <span>TOTAL:</span><span id="total-val">0</span>
+            </div>
+            <div style="height:30px; border-bottom:2px dashed black; margin-bottom:20px;"></div>
+            <div style="text-align:center">
+                <div style="font-weight:900; font-size:18px;">KITCHEN TICKET</div>
+                <div class="order-number">#<span class="curr-order-id">1</span></div>
+            </div>
+            <table class="items-table"><tbody id="kit-body"></tbody></table>
+        </div>
+    </div>
+
+    <div id="print-customer" class="print-target"></div>
+    <div id="print-kitchen" class="print-target"></div>
+    <div id="print-report" class="print-target"></div>
+
+    <script>
+        const distinctColors = [
+            "#e74c3c", "#27ae60", "#2980b9", "#f1c40f", "#8e44ad",
+            "#e67e22", "#16a085", "#2c3e50", "#d35400", "#c0392b",
+            "#34495e", "#7f8c8d", "#2ecc71"
+        ];
+
+        function loadJSON(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw === null) return fallback;
+                const parsed = JSON.parse(raw);
+                return parsed === null || parsed === undefined ? fallback : parsed;
+            } catch (e) {
+                console.error('Corrupted data for key ' + key + ', using default.', e);
+                return fallback;
+            }
+        }
+        function saveJSON(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                console.error('Failed to save ' + key, e);
+                showToast('Could not save data. Storage may be full.', 'error');
+                return false;
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function fmt(n) { return Number(n || 0).toLocaleString(); }
+
+        let menu = loadJSON('shabaa_menu', [
+            { id: 1, name: 'Meat Kofta', price: 2500, color: distinctColors[0], stock: 100 },
+            { id: 2, name: 'Chicken Kofta', price: 2000, color: distinctColors[1], stock: 100 },
+            { id: 3, name: 'Fateera', price: 1500, color: distinctColors[2], stock: 100 }
+        ]);
+
+        let nextAutoId = Math.max(0, ...menu.map(m => m.id || 0)) + 1;
+        menu = menu.map(item => ({
+            ...item,
+            id: item.id !== undefined ? item.id : nextAutoId++,
+            stock: item.stock !== undefined ? item.stock : 100
+        }));
+
+        let addons = loadJSON('shabaa_addons', [
+            'Onion', 'Tomato', 'Mayo', 'Ketchup', 'Spicy',
+            'Chocolate', 'Lutz', 'D', 'TAKE WAY', 'No Onion'
+        ]);
+
+        let sales = loadJSON('shabaa_sales', []);
+        sales = sales.map(s => ({ ...s, paymentMethod: s.paymentMethod || 'Cash' }));
+
+        let salesArchive = loadJSON('shabaa_sales_archive', []);
+        salesArchive = salesArchive.map(s => ({ ...s, paymentMethod: s.paymentMethod || 'Cash' }));
+
+        let orderId = parseInt(localStorage.getItem('shabaa_order_id')) || 1;
+        let cart = loadJSON('shabaa_cart', []);
+        let lastSelectedIndex = cart.length ? cart.length - 1 : -1;
+        let paymentMethod = 'Cash';
+        let pin = localStorage.getItem('shabaa_pin') || '1234';
+        let unlocked = false;
+
+        function showToast(message, type) {
+            type = type || 'info';
+            const stack = document.getElementById('toast-stack');
+            const el = document.createElement('div');
+            el.className = 'toast ' + type;
+            el.textContent = message;
+            stack.appendChild(el);
+            setTimeout(() => { el.remove(); }, 3200);
+        }
+
+        function init() {
+            renderMenu();
+            renderAddons();
+            renderManageMenu();
+            renderManageAddons();
+            updateStats();
+            updatePreview();
+
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('clock').innerText = now.toLocaleString();
+                document.getElementById('print-date').innerText = now.toLocaleString();
+            }, 1000);
+        }
+
+        function tryUnlock() {
+            const input = document.getElementById('pin-input');
+            const err = document.getElementById('pin-error');
+            if (input.value === pin) {
+                unlocked = true;
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('settings-content').style.display = 'block';
+                err.textContent = '';
+                input.value = '';
+            } else {
+                err.textContent = 'Incorrect PIN.';
+            }
+        }
+
+        function changePin() {
+            const newPin = window.prompt('Enter a new PIN (4-8 digits):');
+            if (newPin === null) return;
+            if (!/^\d{4,8}$/.test(newPin)) {
+                showToast('PIN must be 4-8 digits. Not changed.', 'error');
+                return;
+            }
+            pin = newPin;
+            localStorage.setItem('shabaa_pin', pin);
+            showToast('PIN updated.', 'success');
+        }
+
+        function setPayment(method) {
+            paymentMethod = method;
+            document.querySelectorAll('.pay-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('pay-' + method.toLowerCase()).classList.add('active');
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = menu.map((item) => {
+                const outOfStock = item.stock <= 0;
+                const lowStock = item.stock > 0 && item.stock <= 5;
+                const clickHandler = outOfStock ? '' : 'addToCart(' + item.id + ')';
+                return `
+                    <div class="menu-card ${outOfStock ? 'out-of-stock' : ''} ${lowStock ? 'low-stock' : ''}"
+                         style="background-color:${item.color}"
+                         onclick="${clickHandler}">
+                        <b>${escapeHtml(item.name)}</b>
+                        <span class="price-tag">${fmt(item.price)} RWF</span>
+                        <div class="stock-row">
+                            <span class="stock-text">${item.stock} left</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderAddons() {
+            const container = document.getElementById('addon-bar');
+            container.innerHTML = addons.map((name, index) => `
+                <div class="addon-tag" onclick="quickAddon(${index})">+ ${escapeHtml(name)}</div>
+            `).join('');
+        }
+
+        function renderManageMenu() {
+            const container = document.getElementById('manage-menu-list');
+            container.innerHTML = menu.map((item) => `
+                <div class="manage-item">
+                    <span style="flex:1;">${escapeHtml(item.name)}</span>
+                    <span style="color:#7f8c8d; font-size:0.75rem;">Price:</span>
+                    <input type="number" id="price-input-${item.id}" value="${item.price}" min="1">
+                    <span style="color:#7f8c8d; font-size:0.75rem;">Stock:</span>
+                    <input type="number" id="stock-input-${item.id}" value="${item.stock}" min="0">
+                    <button class="save-stock-btn" onclick="saveItem(${item.id})">Save</button>
+                    <button onclick="deleteMenuItem(${item.id})" style="color:red; border:none; background:none; cursor:pointer; font-weight:bold;">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function renderManageAddons() {
+            const container = document.getElementById('manage-addon-list');
+            container.innerHTML = addons.map((name, index) => `
+                <div class="manage-item">
+                    <span>${escapeHtml(name)}</span>
+                    <button onclick="deleteAddon(${index})" style="color:red; border:none; background:none; cursor:pointer; font-weight:bold;">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function saveItem(id) {
+            const priceInput = document.getElementById('price-input-' + id);
+            const stockInput = document.getElementById('stock-input-' + id);
+            const newPrice = parseInt(priceInput.value, 10);
+            const newStock = parseInt(stockInput.value, 10);
+            if (isNaN(newPrice) || newPrice <= 0) {
+                showToast('Price must be a number greater than 0.', 'error');
+                return;
+            }
+            if (isNaN(newStock) || newStock < 0) {
+                showToast('Stock must be 0 or greater.', 'error');
+                return;
+            }
+            const item = menu.find(m => m.id === id);
+            item.price = newPrice;
+            item.stock = newStock;
+            saveJSON('shabaa_menu', menu);
+            renderMenu();
+            renderManageMenu();
+            showToast('Saved ' + item.name + '.', 'success');
+        }
+
+        function addToCart(id) {
+            const item = menu.find(m => m.id === id);
+            if (!item || item.stock <= 0) return;
+
+            const cartQtyForItem = cart.reduce((sum, c) => c.id === id ? sum + c.qty : sum, 0);
+            if (cartQtyForItem >= item.stock) {
+                showToast('Not enough stock for ' + item.name + '. Only ' + item.stock + ' left.', 'error');
+                return;
+            }
+
+            const existing = cart.find(c => c.id === id && c.addons.length === 0);
+            if (existing) {
+                existing.qty++;
+                lastSelectedIndex = cart.indexOf(existing);
+            } else {
+                cart.push({ ...item, qty: 1, addons: [] });
+                lastSelectedIndex = cart.length - 1;
+            }
+            updatePreview();
+        }
+
+        function quickAddon(index) {
+            if (lastSelectedIndex === -1 || cart.length === 0) {
+                showToast('Select a cart item first.', 'info');
+                return;
+            }
+            cart[lastSelectedIndex].addons.push(addons[index]);
+            updatePreview();
+        }
+
+        function closeRestockPop() {
+            const overlay = document.getElementById('restock-overlay');
+            const pop = document.getElementById('restock-pop');
+            if (overlay) overlay.remove();
+            if (pop) pop.remove();
+        }
+
+        function updatePreview() {
+            const custBody = document.getElementById('cust-body');
+            const kitBody = document.getElementById('kit-body');
+            const cartList = document.getElementById('cart-items-list');
+            const printBtn = document.getElementById('print-btn');
+            let total = 0;
+
+            custBody.innerHTML = '';
+            kitBody.innerHTML = '';
+
+            if (cart.length === 0) {
+                cartList.innerHTML = '<div class="cart-empty">No items yet — tap a menu item to add it.</div>';
+            } else {
+                cartList.innerHTML = '';
+            }
+
+            cart.forEach((item, index) => {
+                const lineTotal = item.price * item.qty;
+                total += lineTotal;
+                const addonStr = item.addons.map(escapeHtml).join(', ');
+                const safeName = escapeHtml(item.name);
+
+                cartList.innerHTML += `
+                    <div class="cart-item ${index === lastSelectedIndex ? 'selected' : ''}" onclick="lastSelectedIndex=${index}; updatePreview()">
+                        <div class="item-main">
+                            <b>${item.qty} x ${safeName}</b>
+                            <button onclick="event.stopPropagation(); removeItem(${index})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button>
+                        </div>
+                        <div class="item-line-details">${addonStr}</div>
+                    </div>
+                `;
+
+                custBody.innerHTML += `
+                    <tr>
+                        <td>${item.qty} ${safeName}${addonStr ? `<br><span class="addon-text">+ ${addonStr}</span>` : ''}</td>
+                        <td style="text-align:right">${fmt(lineTotal)}</td>
+                    </tr>
+                `;
+
+                kitBody.innerHTML += `
+                    <tr>
+                        <td><span style="font-size:18px;">${item.qty} ${safeName}</span>${addonStr ? `<br><span>+ ${addonStr}</span>` : ''}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('total-val').innerText = fmt(total) + " RWF";
+            document.querySelectorAll('.curr-order-id').forEach(el => el.innerText = orderId);
+            printBtn.disabled = cart.length === 0;
+
+            saveJSON('shabaa_cart', cart);
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            lastSelectedIndex = cart.length - 1;
+            updatePreview();
+        }
+
+        function buildReceiptHTML(type) {
+            const now = new Date();
+            let total = 0;
+            cart.forEach(item => { total += item.price * item.qty; });
+
+            let html = '';
+            if (type === 'customer') {
+                html += `<div style="text-align:center">
+                    <div style="font-size:26px; font-weight:900;">SHABAA</div>
+                    <div style="font-size:28px; font-weight:900; margin:5px 0; border:3px solid black; padding:4px 12px; display:inline-block;">#${orderId}</div>
+                    <div style="font-size:12px; font-weight:900;">${now.toLocaleString()}</div>
+                    <div style="border-top:2px solid black; border-bottom:2px solid black; margin:8px 0; font-size:14px; font-weight:900;">CUSTOMER COPY — ${paymentMethod}</div>
+                </div>`;
+                html += `<table style="width:100%; border-collapse:collapse;">`;
+                cart.forEach(item => {
+                    const lineTotal = item.price * item.qty;
+                    const addonStr = item.addons.map(escapeHtml).join(', ');
+                    html += `<tr>
+                        <td style="padding:8px 0; font-size:16px; vertical-align:top; border-bottom:1px solid #000; font-weight:900;">
+                            ${item.qty} ${escapeHtml(item.name)}${addonStr ? `<br><span style="font-size:13px; font-weight:900; color:black; display:block; margin-top:2px;">+ ${addonStr}</span>` : ''}
+                        </td>
+                        <td style="text-align:right; padding:8px 0; font-size:16px; vertical-align:top; border-bottom:1px solid #000; font-weight:900;">${fmt(lineTotal)}</td>
+                    </tr>`;
+                });
+                html += `</table>`;
+                html += `<div style="border-top:3px solid black; margin-top:8px; padding-top:8px; display:flex; justify-content:space-between; font-size:22px; font-weight:900;">
+                    <span>TOTAL:</span><span>${fmt(total)} RWF</span>
+                </div>`;
+            } else {
+                html += `<div style="text-align:center">
+                    <div style="font-weight:900; font-size:18px;">KITCHEN TICKET</div>
+                    <div style="font-size:28px; font-weight:900; margin:5px 0; border:3px solid black; padding:4px 12px; display:inline-block;">#${orderId}</div>
+                </div>`;
+                html += `<table style="width:100%; border-collapse:collapse;">`;
+                cart.forEach(item => {
+                    const addonStr = item.addons.map(escapeHtml).join(', ');
+                    html += `<tr>
+                        <td style="padding:8px 0; font-size:18px; vertical-align:top; border-bottom:1px solid #000; font-weight:900;">
+                            <span style="font-size:18px;">${item.qty} ${escapeHtml(item.name)}</span>${addonStr ? `<br><span style="font-size:14px;">+ ${addonStr}</span>` : ''}
+                        </td>
+                    </tr>`;
+                });
+                html += `</table>`;
+            }
+            return html;
+        }
+
+        function triggerPrint() {
+            if (cart.length === 0) return;
+
+            const customerDiv = document.getElementById('print-customer');
+            const kitchenDiv = document.getElementById('print-kitchen');
+            const btn = document.getElementById('print-btn');
+
+            customerDiv.innerHTML = buildReceiptHTML('customer');
+            kitchenDiv.innerHTML = buildReceiptHTML('kitchen');
+
+            customerDiv.classList.add('active');
+            window.print();
+            customerDiv.classList.remove('active');
+
+            btn.innerText = 'Preparing Kitchen Ticket...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                kitchenDiv.classList.add('active');
+                window.print();
+                kitchenDiv.classList.remove('active');
+
+                btn.innerText = 'PRINT INVOICE';
+                finalizeOrder();
+            }, 2000);
+        }
+
+        function finalizeOrder() {
+            cart.forEach(cartItem => {
+                const menuItem = menu.find(m => m.id === cartItem.id);
+                if (menuItem) {
+                    menuItem.stock = Math.max(0, menuItem.stock - cartItem.qty);
+                }
+            });
+            saveJSON('shabaa_menu', menu);
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            const saleRecord = {
+                id: orderId,
+                uid: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+                total: total,
+                items: JSON.parse(JSON.stringify(cart)),
+                paymentMethod: paymentMethod,
+                date: new Date().toISOString()
+            };
+
+            sales.push(saleRecord);
+            saveJSON('shabaa_sales', sales);
+
+            salesArchive.push(saleRecord);
+            saveJSON('shabaa_sales_archive', salesArchive);
+
+            orderId++;
+            localStorage.setItem('shabaa_order_id', orderId);
+
+            cart = [];
+            lastSelectedIndex = -1;
+
+            updatePreview();
+            updateStats();
+            renderMenu();
+            renderManageMenu();
+            showToast('Order #' + (orderId - 1) + ' completed.', 'success');
+
+            document.getElementById('print-btn').disabled = true;
+        }
+
+        function updateStats() {
+            const total = sales.reduce((sum, s) => sum + s.total, 0);
+            document.getElementById('stat-count').innerText = sales.length;
+            document.getElementById('stat-revenue').innerText = fmt(total);
+
+            const cashTotal = sales.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + s.total, 0);
+            const momoTotal = sales.filter(s => s.paymentMethod === 'MoMo').reduce((sum, s) => sum + s.total, 0);
+            document.getElementById('cash-total').innerText = fmt(cashTotal) + ' RWF';
+            document.getElementById('momo-total').innerText = fmt(momoTotal) + ' RWF';
+
+            const itemCounts = {};
+            sales.forEach(s => s.items.forEach(i => {
+                itemCounts[i.name] = (itemCounts[i.name] || 0) + i.qty;
+            }));
+
+            const top5 = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            const top5Container = document.getElementById('top5-container');
+            if (top5.length === 0) {
+                top5Container.innerHTML = '<div class="top5-empty">No sales data yet — start selling!</div>';
+            } else {
+                top5Container.innerHTML = top5.map(([name, qty], i) => `
+                    <div class="top5-card" style="background:${distinctColors[i % distinctColors.length]};">
+                        <div class="t5-label">${i+1}. ${escapeHtml(name)}</div>
+                        <div class="t5-val">${qty} sold</div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('item-stats-body').innerHTML = Object.entries(itemCounts)
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .map(([name, qty]) => `<tr><td>${escapeHtml(name)}</td><td style="text-align:right"><b>${qty}</b></td></tr>`).join('');
+
+            const recentSales = sales.slice(-30).reverse();
+            document.getElementById('orders-list').innerHTML = recentSales.map((s, idx) => {
+                const realIndex = sales.length - 1 - idx;
+                const dateStr = new Date(s.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                return `
+                    <div class="order-row">
+                        <span>#${s.id} — ${fmt(s.total)} RWF — ${s.paymentMethod} — ${dateStr}</span>
+                        <button onclick="deleteOrder(${realIndex})">Delete</button>
+                    </div>
+                `;
+            }).join('') || '<div style="font-size:0.8rem; color:#7f8c8d; text-align:center; padding:10px;">No orders yet</div>';
+        }
+
+        let currentReportHTML = '';
+
+        function startOfWeek(d) {
+            const day = d.getDay();
+            const diffToMonday = (day === 0 ? -6 : 1 - day);
+            const monday = new Date(d);
+            monday.setDate(d.getDate() + diffToMonday);
+            monday.setHours(0, 0, 0, 0);
+            return monday;
+        }
+
+        function periodStart(period) {
+            const now = new Date();
+            if (period === 'daily') return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            if (period === 'weekly') return startOfWeek(now);
+            return new Date(now.getFullYear(), now.getMonth(), 1);
+        }
+
+        function periodLabel(period) {
+            if (period === 'daily') return 'Daily Report — Today';
+            if (period === 'weekly') return 'Weekly Report — Breakdown by Day';
+            return 'Monthly Report — Breakdown by Week';
+        }
+
+        function generateReport(period) {
+            const start = periodStart(period);
+            const filtered = salesArchive.filter(s => new Date(s.date) >= start);
+            const total = filtered.reduce((sum, s) => sum + s.total, 0);
+            const cash = filtered.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + s.total, 0);
+            const momo = filtered.filter(s => s.paymentMethod === 'MoMo').reduce((sum, s) => sum + s.total, 0);
+
+            showReportModal(period, { count: filtered.length, total, cash, momo, filtered, period });
+        }
+
+        function showReportModal(period, data) {
+            closeReportModal();
+            const label = periodLabel(period);
+            let detailRows = '';
+
+            if (period === 'daily') {
+                const itemCounts = {};
+                data.filtered.forEach(s => s.items.forEach(i => {
+                    itemCounts[i.name] = (itemCounts[i.name] || 0) + i.qty;
+                }));
+                const allItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]);
+
+                detailRows = `
+                    <div style="margin-top:10px; font-weight:bold; color:var(--primary); font-size:0.85rem; border-bottom:1px solid #ccc; padding-bottom:3px;">All Items Sold Today</div>
+                `;
+                if (allItems.length === 0) {
+                    detailRows += '<div class="report-row"><span>No items sold today.</span></div>';
+                } else {
+                    allItems.forEach(([name, qty], i) => {
+                        detailRows += `<div class="report-row"><span>${i + 1}. ${escapeHtml(name)}</span><span><b>${qty}</b> sold</span></div>`;
+                    });
+                }
+            } else if (period === 'weekly') {
+                const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                const daysData = Array(7).fill(0).map(() => ({ count: 0, total: 0 }));
+
+                data.filtered.forEach(s => {
+                    const d = new Date(s.date);
+                    let dayIdx = d.getDay() - 1;
+                    if (dayIdx === -1) dayIdx = 6; // Sunday
+                    daysData[dayIdx].count += 1;
+                    daysData[dayIdx].total += s.total;
+                });
+
+                detailRows = `
+                    <div style="margin-top:10px; font-weight:bold; color:var(--primary); font-size:0.85rem; border-bottom:1px solid #ccc; padding-bottom:3px;">Daily Breakdown</div>
+                `;
+                dayNames.forEach((day, idx) => {
+                    detailRows += `<div class="report-row">
+                        <span><b>${day}</b></span>
+                        <span>${daysData[idx].count} orders — <b>${fmt(daysData[idx].total)} RWF</b></span>
+                    </div>`;
+                });
+            } else if (period === 'monthly') {
+                const weeksData = [
+                    { name: 'Week 1 (Days 1-7)', count: 0, total: 0 },
+                    { name: 'Week 2 (Days 8-14)', count: 0, total: 0 },
+                    { name: 'Week 3 (Days 15-21)', count: 0, total: 0 },
+                    { name: 'Week 4 (Days 22-End)', count: 0, total: 0 }
+                ];
+
+                data.filtered.forEach(s => {
+                    const dayOfMonth = new Date(s.date).getDate();
+                    let wIdx = 0;
+                    if (dayOfMonth > 21) wIdx = 3;
+                    else if (dayOfMonth > 14) wIdx = 2;
+                    else if (dayOfMonth > 7) wIdx = 1;
+
+                    weeksData[wIdx].count += 1;
+                    weeksData[wIdx].total += s.total;
+                });
+
+                detailRows = `
+                    <div style="margin-top:10px; font-weight:bold; color:var(--primary); font-size:0.85rem; border-bottom:1px solid #ccc; padding-bottom:3px;">Weekly Breakdown</div>
+                `;
+                weeksData.forEach(w => {
+                    detailRows += `<div class="report-row">
+                        <span><b>${w.name}</b></span>
+                        <span>${w.count} orders — <b>${fmt(w.total)} RWF</b></span>
+                    </div>`;
+                });
+            }
+
+            currentReportHTML = `
+                <div style="text-align:center; margin-bottom:8px;">
+                    <div style="font-size:20px; font-weight:900;">SHABAA</div>
+                    <div style="font-size:13px; font-weight:900;">${escapeHtml(label)}</div>
+                    <div style="font-size:11px;">${new Date().toLocaleString()}</div>
+                </div>
+                <div class="report-row"><span>Total Orders</span><span><b>${data.count}</b></span></div>
+                <div class="report-row"><span>Total Revenue</span><span><b>${fmt(data.total)} RWF</b></span></div>
+                <div class="report-row"><span>Cash</span><span>${fmt(data.cash)} RWF</span></div>
+                <div class="report-row"><span>MoMo</span><span>${fmt(data.momo)} RWF</span></div>
+                ${detailRows}
+            `;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'pop-overlay';
+            overlay.id = 'report-overlay';
+            overlay.style.zIndex = 54;
+            overlay.onclick = closeReportModal;
+
+            const modal = document.createElement('div');
+            modal.className = 'report-modal';
+            modal.id = 'report-modal';
+            modal.innerHTML = `
+                <h3>${escapeHtml(label)}</h3>
+                ${currentReportHTML}
+                <div class="report-actions">
+                    <button class="close-btn" onclick="closeReportModal()">Close</button>
+                    <button class="print-btn" onclick="printReport()">Print Report</button>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(modal);
+        }
+
+        function closeReportModal() {
+            const overlay = document.getElementById('report-overlay');
+            const modal = document.getElementById('report-modal');
+            if (overlay) overlay.remove();
+            if (modal) modal.remove();
+        }
+
+        function printReport() {
+            const target = document.getElementById('print-report');
+            target.innerHTML = currentReportHTML;
+            target.classList.add('active');
+            window.print();
+            target.classList.remove('active');
+        }
+
+        function deleteOrder(index) {
+            if (confirm("Permanently delete this order from records? This cannot be undone.")) {
+                const target = sales[index];
+                sales.splice(index, 1);
+                saveJSON('shabaa_sales', sales);
+
+                if (target && target.uid) {
+                    salesArchive = salesArchive.filter(s => s.uid !== target.uid);
+                    saveJSON('shabaa_sales_archive', salesArchive);
+                }
+
+                updateStats();
+                showToast('Order deleted.', 'info');
+            }
+        }
+
+        function addNewItem() {
+            const nameInput = document.getElementById('new-item-name');
+            const priceInput = document.getElementById('new-item-price');
+            const stockInput = document.getElementById('new-item-stock');
+            const errEl = document.getElementById('new-item-error');
+            errEl.textContent = '';
+
+            const name = nameInput.value.trim();
+            const price = parseInt(priceInput.value, 10);
+            const stock = parseInt(stockInput.value, 10);
+
+            if (!name) { errEl.textContent = 'Enter a name for the item.'; return; }
+            if (menu.some(m => m.name.toLowerCase() === name.toLowerCase())) {
+                errEl.textContent = 'An item with that name already exists.';
+                return;
+            }
+            if (isNaN(price) || price <= 0) { errEl.textContent = 'Enter a price greater than 0.'; return; }
+            if (isNaN(stock) || stock < 0) { errEl.textContent = 'Enter a stock of 0 or greater.'; return; }
+
+            const nextColor = distinctColors[menu.length % distinctColors.length];
+            menu.push({ id: nextAutoId++, name, price, color: nextColor, stock });
+            saveJSON('shabaa_menu', menu);
+            renderMenu();
+            renderManageMenu();
+
+            nameInput.value = '';
+            priceInput.value = '';
+            stockInput.value = '50';
+            showToast('Added ' + name + ' to the menu.', 'success');
+        }
+
+        function deleteMenuItem(id) {
+            const item = menu.find(m => m.id === id);
+            if (!item) return;
+            if (confirm('Delete "' + item.name + '" from the menu?')) {
+                menu = menu.filter(m => m.id !== id);
+                saveJSON('shabaa_menu', menu);
+                renderMenu();
+                renderManageMenu();
+                showToast(item.name + ' deleted.', 'info');
+            }
+        }
+
+        function addNewAddon() {
+            const input = document.getElementById('new-addon-name');
+            const errEl = document.getElementById('new-addon-error');
+            errEl.textContent = '';
+            const name = input.value.trim();
+            if (!name) { errEl.textContent = 'Enter an addon name.'; return; }
+            if (addons.some(a => a.toLowerCase() === name.toLowerCase())) {
+                errEl.textContent = 'That addon already exists.';
+                return;
+            }
+            addons.push(name);
+            saveJSON('shabaa_addons', addons);
+            renderAddons();
+            renderManageAddons();
+            input.value = '';
+            showToast('Addon added.', 'success');
+        }
+
+        function deleteAddon(index) {
+            if (confirm("Delete this addon?")) {
+                addons.splice(index, 1);
+                saveJSON('shabaa_addons', addons);
+                renderAddons();
+                renderManageAddons();
+            }
+        }
+
+        function exportData() {
+            const payload = { menu, addons, sales, salesArchive, orderId, exportedAt: new Date().toISOString() };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'shabaa-pos-backup-' + new Date().toISOString().slice(0,10) + '.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showToast('Backup downloaded.', 'success');
+        }
+
+        function importData(evt) {
+            const file = evt.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(reader.result);
+                    if (!Array.isArray(data.menu) || !Array.isArray(data.addons) || !Array.isArray(data.sales)) {
+                        throw new Error('Missing expected fields');
+                    }
+                    if (!confirm('This will replace all current menu, addon, and sales data. Continue?')) return;
+                    menu = data.menu;
+                    addons = data.addons;
+                    sales = data.sales;
+                    salesArchive = Array.isArray(data.salesArchive) ? data.salesArchive : data.sales;
+                    orderId = data.orderId || 1;
+                    nextAutoId = Math.max(0, ...menu.map(m => m.id || 0)) + 1;
+                    saveJSON('shabaa_menu', menu);
+                    saveJSON('shabaa_addons', addons);
+                    saveJSON('shabaa_sales', sales);
+                    saveJSON('shabaa_sales_archive', salesArchive);
+                    localStorage.setItem('shabaa_order_id', orderId);
+                    renderMenu();
+                    renderAddons();
+                    renderManageMenu();
+                    renderManageAddons();
+                    updateStats();
+                    updatePreview();
+                    showToast('Backup restored successfully.', 'success');
+                } catch (e) {
+                    showToast('That file is not a valid SHABAA POS backup.', 'error');
+                }
+            };
+            reader.readAsText(file);
+            evt.target.value = '';
+        }
+
+        function resetSystem() {
+            if (confirm("Reset daily sales? This will clear today's sales list and reset order # to 1. The remaining item stocks will stay unchanged, and weekly/monthly report history is kept.")) {
+                localStorage.removeItem('shabaa_sales');
+                localStorage.setItem('shabaa_order_id', 1);
+                localStorage.removeItem('shabaa_cart');
+                location.reload();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
